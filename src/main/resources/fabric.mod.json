@@ -19,6 +19,7 @@
   ],
   "depends": {
     "fabricloader": ">=${loader_version}",
+    "fabric-api": "*",
     "polymer-core": "*",
     "minecraft": ">=1.21.9-"
   }
