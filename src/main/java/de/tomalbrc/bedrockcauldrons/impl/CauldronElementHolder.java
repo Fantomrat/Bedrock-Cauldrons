@@ -10,7 +10,7 @@ import eu.pb4.polymer.virtualentity.api.elements.ItemDisplayElement;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.particles.ColorParticleOption;
 import net.minecraft.core.particles.ParticleTypes;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.server.network.ServerGamePacketListenerImpl;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
@@ -40,7 +40,7 @@ public class CauldronElementHolder extends ElementHolder {
 
     private ItemStack item() {
         var item = Items.PAPER.getDefaultInstance();
-        item.set(DataComponents.ITEM_MODEL, ResourceLocation.fromNamespaceAndPath("bedrock-cauldrons", "liquid_level"));
+        item.set(DataComponents.ITEM_MODEL, Identifier.fromNamespaceAndPath("bedrock-cauldrons", "liquid_level"));
         item.set(DataComponents.DYED_COLOR, new DyedItemColor(color));
         return item;
     }

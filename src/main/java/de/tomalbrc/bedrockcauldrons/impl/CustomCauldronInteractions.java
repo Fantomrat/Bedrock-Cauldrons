@@ -4,12 +4,14 @@ import de.tomalbrc.bedrockcauldrons.ModConfig;
 import de.tomalbrc.bedrockcauldrons.impl.block.PolymerCauldron;
 import de.tomalbrc.bedrockcauldrons.impl.block.entity.DyeCauldronBlockEntity;
 import de.tomalbrc.bedrockcauldrons.impl.block.entity.PotionCauldronBlockEntity;
-import de.tomalbrc.bedrockcauldrons.mixin.CauldronInteractionAccessor;
-import de.tomalbrc.bedrockcauldrons.mixin.DyeItemAccessor;
+import de.tomalbrc.bedrockcauldrons.mixin.DispatcherAccessor;
+import de.tomalbrc.bedrockcauldrons.mixin.CauldronInteractionsAccessor;
+//import de.tomalbrc.bedrockcauldrons.mixin.DyeItemAccessor;
 import net.fabricmc.fabric.api.event.lifecycle.v1.ServerLifecycleEvents;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Holder;
 import net.minecraft.core.cauldron.CauldronInteraction;
+import net.minecraft.core.cauldron.CauldronInteractions;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.sounds.SoundEvents;
@@ -31,32 +33,29 @@ import net.minecraft.world.level.gameevent.GameEvent;
 import java.util.List;
 
 public class CustomCauldronInteractions {
-    public static final CauldronInteraction.InteractionMap POTION = CauldronInteractionAccessor.invokeNewInteractionMap("potion");
-    public static final CauldronInteraction.InteractionMap DYE = CauldronInteractionAccessor.invokeNewInteractionMap("dye");
+    public static final CauldronInteraction.Dispatcher POTION = CauldronInteractionsAccessor.invokeNewDispatcher("potion");
+    public static final CauldronInteraction.Dispatcher DYE = CauldronInteractionsAccessor.invokeNewDispatcher("dye");
 
     public static void init() {
         initPotion();
         ServerLifecycleEvents.SERVER_STARTED.register(x -> initDye());
 
-        var map = CauldronInteraction.WATER.map();
-        var map2 = DYE.map();
+        var water = CauldronInteractions.WATER;
 
-        var list = DyeItemAccessor.getITEM_BY_COLOR().values();
-        for (Item item : list) {
-            map.put(item, DYE_WATER);
-            map2.put(item, DYE_WATER);
-        }
+        ((DispatcherAccessor) water).invokePut(ItemTags.DYES, DYE_WATER);
+        ((DispatcherAccessor) DYE).invokePut(ItemTags.DYES, DYE_WATER);
+
     }
 
     private static void initPotion() {
-        var map = POTION.map();
+        var potionDispatcher = POTION;
 
         if (ModConfig.getInstance().potions) {
-            map.put(Items.POTION, POTION_BOTTLE);
-            map.put(Items.LINGERING_POTION, POTION_BOTTLE);
-            map.put(Items.SPLASH_POTION, POTION_BOTTLE);
+            ((DispatcherAccessor) potionDispatcher).invokePut(Items.POTION, POTION_BOTTLE);
+            ((DispatcherAccessor) potionDispatcher).invokePut(Items.LINGERING_POTION, POTION_BOTTLE);
+            ((DispatcherAccessor) potionDispatcher).invokePut(Items.SPLASH_POTION, POTION_BOTTLE);
 
-            map.put(Items.GLASS_BOTTLE, ((blockState, level, blockPos, player, interactionHand, itemStack) -> {
+            ((DispatcherAccessor) potionDispatcher).invokePut(Items.GLASS_BOTTLE, ((blockState, level, blockPos, player, interactionHand, itemStack) -> {
                 if (!level.isClientSide() && level.getBlockEntity(blockPos) instanceof PotionCauldronBlockEntity cauldronBlock) {
                     Item item = itemStack.getItem();
                     player.setItemInHand(interactionHand, ItemUtils.createFilledResult(itemStack, player, PotionContents.createItemStack(Items.POTION, cauldronBlock.getPotion())));
@@ -71,7 +70,7 @@ public class CustomCauldronInteractions {
             }));
         }
 
-        if (ModConfig.getInstance().tippedArrows) map.put(Items.ARROW, ((blockState, level, blockPos, player, interactionHand, itemStack) -> {
+        if (ModConfig.getInstance().tippedArrows) ((DispatcherAccessor) potionDispatcher).invokePut(Items.ARROW, ((blockState, level, blockPos, player, interactionHand, itemStack) -> {
             if (!level.isClientSide() && level.getBlockEntity(blockPos) instanceof PotionCauldronBlockEntity cauldronBlock) {
                 Item item = itemStack.getItem();
                 int count = itemStack.getCount();
@@ -102,10 +101,7 @@ public class CustomCauldronInteractions {
     }
 
     private static void initDye() {
-        var map = DYE.map();
-        for (Holder<Item> itemHolder : BuiltInRegistries.ITEM.get(ItemTags.DYEABLE).orElseThrow()) {
-            map.put(itemHolder.value(), DYE_LEATHER);
-        }
+        ((DispatcherAccessor) DYE).invokePut(ItemTags.CAULDRON_CAN_REMOVE_DYE, DYE_LEATHER);
     }
 
     public static void lowerFillLevel(BlockState blockState, Level level, BlockPos blockPos) {
@@ -168,7 +164,7 @@ public class CustomCauldronInteractions {
     }
 
     public static ItemStack applyDyes(ItemStack itemStack, List<Integer> list) {
-        if (!itemStack.is(ItemTags.DYEABLE)) {
+        if (!itemStack.is(ItemTags.CAULDRON_CAN_REMOVE_DYE)) {
             return ItemStack.EMPTY;
         } else {
             ItemStack copied = itemStack.copyWithCount(1);
@@ -239,6 +235,10 @@ public class CustomCauldronInteractions {
                     return InteractionResult.PASS;
                 }
 
+                if (blockState.is(ModBlocks.POTION_CAULDON) && blockState.getValue(PolymerCauldron.LEVEL) == 3) {
+                    return InteractionResult.PASS;
+                }
+
                 Item item = itemStack.getItem();
                 player.setItemInHand(interactionHand, ItemUtils.createFilledResult(itemStack, player, new ItemStack(Items.GLASS_BOTTLE)));
                 player.awardStat(Stats.USE_CAULDRON);
@@ -247,7 +247,8 @@ public class CustomCauldronInteractions {
                 int cauldronLevel;
                 if (blockState.is(Blocks.CAULDRON)) {
                     cauldronLevel = 1;
-                } else {
+                }
+                else {
                     cauldronLevel = Math.min(3, blockState.getValue(PolymerCauldron.LEVEL) + 1);
                 }
                 level.setBlockAndUpdate(blockPos, ModBlocks.POTION_CAULDON.defaultBlockState().setValue(PolymerCauldron.LEVEL, cauldronLevel));
@@ -267,7 +268,7 @@ public class CustomCauldronInteractions {
     };
 
     public static CauldronInteraction DYE_WATER = (blockState, level, blockPos, player, interactionHand, itemStack) -> {
-        if (!level.isClientSide() && itemStack.getItem() instanceof DyeItem dyeItem) {
+        if (!level.isClientSide() && itemStack.get(DataComponents.DYE) != null) {
             Item item = itemStack.getItem();
             player.awardStat(Stats.USE_CAULDRON);
             player.awardStat(Stats.ITEM_USED.get(item));
@@ -277,10 +278,12 @@ public class CustomCauldronInteractions {
             var blockEntity = level.getBlockEntity(blockPos);
             if (blockEntity instanceof DyeCauldronBlockEntity cauldronBlock) {
                 var c = cauldronBlock.getColor();
+                DyeColor dye = itemStack.get(DataComponents.DYE);
+
                 if (c != null) {
-                    c = mixColors(c, List.of(dyeItem.getDyeColor().getTextureDiffuseColor()));
+                    c = mixColors(c, List.of(dye.getTextureDiffuseColor()));
                 } else {
-                    c = dyeItem.getDyeColor().getTextureDiffuseColor();
+                    c = dye.getTextureDiffuseColor();
                 }
                 cauldronBlock.setColor(c);
             }

@@ -5,6 +5,7 @@ import de.tomalbrc.bedrockcauldrons.impl.CauldronElementHolder;
 import de.tomalbrc.bedrockcauldrons.impl.CustomCauldronInteractions;
 import de.tomalbrc.bedrockcauldrons.impl.block.entity.PotionCauldronBlockEntity;
 import eu.pb4.polymer.virtualentity.api.ElementHolder;
+import net.fabricmc.fabric.api.networking.v1.context.PacketContext;
 import net.minecraft.core.BlockPos;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.level.block.LayeredCauldronBlock;
