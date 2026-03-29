@@ -10,7 +10,7 @@ import net.minecraft.core.Registry;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.resources.ResourceLocation;
+import net.minecraft.resources.Identifier;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Block;
@@ -22,22 +22,22 @@ import net.minecraft.world.level.block.state.BlockBehaviour;
 import java.util.function.Function;
 
 public class ModBlocks {
-    public static final Block POTION_CAULDON = registerBlock(ResourceLocation.withDefaultNamespace("potion_cauldron"), PotionCauldron::new, BlockBehaviour.Properties.ofLegacyCopy(Blocks.CAULDRON));
-    public static final Block DYE_CAULDON = registerBlock(ResourceLocation.withDefaultNamespace("dye_cauldron"), DyeCauldron::new, BlockBehaviour.Properties.ofLegacyCopy(Blocks.CAULDRON));
-    public static final BlockEntityType<DyeCauldronBlockEntity> DYE_CAULDON_ENTITY = registerBlockEntity(ResourceLocation.withDefaultNamespace("dye_cauldron_entity"), FabricBlockEntityTypeBuilder.create(DyeCauldronBlockEntity::new, DYE_CAULDON).build());
-    public static final BlockEntityType<PotionCauldronBlockEntity> POTION_CAULDON_ENTITY = registerBlockEntity(ResourceLocation.withDefaultNamespace("potion_cauldron_entity"), FabricBlockEntityTypeBuilder.create(PotionCauldronBlockEntity::new, POTION_CAULDON).build());
+    public static final Block POTION_CAULDON = registerBlock(Identifier.withDefaultNamespace("potion_cauldron"), PotionCauldron::new, BlockBehaviour.Properties.ofLegacyCopy(Blocks.CAULDRON));
+    public static final Block DYE_CAULDON = registerBlock(Identifier.withDefaultNamespace("dye_cauldron"), DyeCauldron::new, BlockBehaviour.Properties.ofLegacyCopy(Blocks.CAULDRON));
+    public static final BlockEntityType<DyeCauldronBlockEntity> DYE_CAULDON_ENTITY = registerBlockEntity(Identifier.withDefaultNamespace("dye_cauldron_entity"), FabricBlockEntityTypeBuilder.create(DyeCauldronBlockEntity::new, DYE_CAULDON).build());
+    public static final BlockEntityType<PotionCauldronBlockEntity> POTION_CAULDON_ENTITY = registerBlockEntity(Identifier.withDefaultNamespace("potion_cauldron_entity"), FabricBlockEntityTypeBuilder.create(PotionCauldronBlockEntity::new, POTION_CAULDON).build());
 
-    public static <T extends Block> T registerBlock(ResourceLocation id, Function<BlockBehaviour.Properties, T> function, BlockBehaviour.Properties properties) {
+    public static <T extends Block> T registerBlock(Identifier id, Function<BlockBehaviour.Properties, T> function, BlockBehaviour.Properties properties) {
         var key = ResourceKey.create(Registries.BLOCK, id);
         T block = function.apply(properties.setId(key));
         return Registry.register(BuiltInRegistries.BLOCK, key, block);
     }
 
-    public static ResourceKey<BlockEntityType<?>> key(ResourceLocation id) {
+    public static ResourceKey<BlockEntityType<?>> key(Identifier id) {
         return ResourceKey.create(Registries.BLOCK_ENTITY_TYPE, id);
     }
 
-    public static <T extends BlockEntity> BlockEntityType<T> registerBlockEntity(ResourceLocation id, BlockEntityType<T> type) {
+    public static <T extends BlockEntity> BlockEntityType<T> registerBlockEntity(Identifier id, BlockEntityType<T> type) {
         Registry.register(BuiltInRegistries.BLOCK_ENTITY_TYPE, key(id), type);
         PolymerBlockUtils.registerBlockEntity(type);
         return type;

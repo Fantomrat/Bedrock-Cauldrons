@@ -4,9 +4,9 @@
   "package": "de.tomalbrc.bedrockcauldrons.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
-    "CauldronInteractionAccessor",
-    "CauldronInteractionMixin",
-    "DyeItemAccessor"
+    "CauldronInteractionsMixin",
+    "CauldronInteractionsAccessor",
+    "DispatcherAccessor"
   ],
   "injectors": {
     "defaultRequire": 1
